@@ -6,7 +6,7 @@
 #include <string>
 using namespace std;
 
-#include "utils/get_assets_path.h"
+#include "get_assets_path.h"
 
 int main() {
   string imagePath = getAssetPath("backgrounds/initial_screen.jpg");
@@ -93,12 +93,14 @@ int main() {
     auto elapsed =
         chrono::duration_cast<chrono::milliseconds>(currentTime - startTime)
             .count();
-    if (elapsed <= fadeDuration) {
-      int alpha = static_cast<int>(255.0 * elapsed / fadeDuration);
-      textColor.a = alpha;
-      SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    int alpha = 255;
+
+    if (elapsed < fadeDuration) {
+      alpha = static_cast<int>(255.0 * elapsed / fadeDuration);
     }
 
+    textColor.a = alpha;
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
     SDL_RenderPresent(renderer);
   }
 
