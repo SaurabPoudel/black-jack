@@ -1,20 +1,64 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_error.h>
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_log.h>
+#include <SDL2/SDL_render.h>
+#include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_video.h>
+#include <cstddef>
+#include <string>
+using namespace std;
+
+#include "utils/get_assets_path.h"
 
 int main() {
+  string imagePath = getAssetPath("backgrounds/initial_screen.jpg");
+  string HeadingFontPath = getAssetPath("fonts/Cabin-Bold.ttf");
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
     return 1;
   }
 
+  if (TTF_Init() != 0) {
+    SDL_Log("Unable to initialize SDL2_ttf: %s", TTF_GetError());
+  }
+
+  if (IMG_Init(IMG_INIT_JPG) != IMG_INIT_JPG) {
+    SDL_Log("Unable to initialize SDL2_image: %s", IMG_GetError());
+    return 1;
+  }
   // Create a window
   SDL_Window *window =
-      SDL_CreateWindow("Blank Window", SDL_WINDOWPOS_UNDEFINED,
-                       SDL_WINDOWPOS_UNDEFINED, 800, 600, SDL_WINDOW_SHOWN);
+      SDL_CreateWindow("Black Jack", 0, 0, 1000, 800, SDL_WINDOW_SHOWN);
   if (!window) {
     SDL_Log("Unable to create window: %s", SDL_GetError());
     return 1;
   }
+
+  SDL_Renderer *renderer =
+      SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  if (!renderer) {
+    SDL_Log("Unable to create renderer : %s", SDL_GetError());
+    return 1;
+  }
+
+  SDL_Texture *imageTexture = IMG_LoadTexture(renderer, imagePath.c_str());
+  if (!imageTexture) {
+    SDL_Log("Unable to load image: %s", IMG_GetError());
+    return 1;
+  }
+
+  TTF_Font *font = TTF_OpenFont(HeadingFontPath.c_str(), 50);
+  if (!font) {
+    SDL_Log("Unable to load font: %s", TTF_GetError());
+  }
+
+  SDL_Color textColor = {255, 255, 255};
+  SDL_Surface *textSurface =
+      TTF_RenderText_Solid_Wrapped(font, "Black Jack", textColor, 0);
+  SDL_Texture *textTexture =
+      SDL_CreateTextureFromSurface(renderer, textSurface);
 
   // Main loop
   bool quit = false;
@@ -25,11 +69,26 @@ int main() {
         quit = true;
       }
     }
+    SDL_RenderClear(renderer);
+    SDL_RenderCopy(renderer, imageTexture, NULL, NULL);
+    SDL_Rect textRect;
+    textRect.x = 350;            // X-coordinate
+    textRect.y = 100;            // Y-coordinate
+    textRect.w = textSurface->w; // Width of the text
+    textRect.h = textSurface->h; // Height of the text
+
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_RenderPresent(renderer);
   }
 
   // Cleanup and quit
+  TTF_CloseFont(font);
+  SDL_DestroyTexture(imageTexture);
+  SDL_DestroyTexture(textTexture);
+  SDL_DestroyRenderer(renderer);
+  SDL_FreeSurface(textSurface);
   SDL_DestroyWindow(window);
+  IMG_Quit();
   SDL_Quit();
-
   return 0;
 }

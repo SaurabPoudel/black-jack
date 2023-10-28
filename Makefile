@@ -17,7 +17,7 @@ EXECUTABLE = $(BIN_DIR)/blackjack_game
 
 # SDL2 flags and libraries
 SDL_CFLAGS = $(shell sdl2-config --cflags)
-SDL_LDFLAGS = $(shell sdl2-config --libs)
+SDL_LDFLAGS = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf  
 
 # Targets
 all: $(EXECUTABLE)
@@ -28,7 +28,7 @@ $(EXECUTABLE): $(OBJECTS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(BUILD_DIR)
-	$(CC) $(CFLAGS) -I $(INCLUDE_DIR) -c $< -o $@ ` sdl2-config --cflags`
+	$(CC) $(CFLAGS) -I $(INCLUDE_DIR) -c $< -o $@ $(shell sdl2-config --cflags)
 
 clean:
 	rm -rf $(BUILD_DIR)
